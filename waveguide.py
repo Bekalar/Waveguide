@@ -23,9 +23,9 @@ def numerov_cowells2(a, b, ndiv, y0, y1, funk, kk):
     return xp, yp
 
 
-def bisecSiatka(xl, xr, tolx, fun, n_, h_):
+def bisec(xl, xr, tolx, fun, n_, h_):
     if fun(xr, n_, h_) * fun(xl, n_, h_) > 0:
-        return 'no zero'
+        return "no zero"
     while (xr - xl) / 2.0 > tolx:
         xs = (xr + xl) / 2.0
         if fun(xr, n_, h_) * fun(xs, n_, h_) < 0:
@@ -42,105 +42,50 @@ def fiMXY(k):
     return xx, psi
 
 
-def fiSiatka(k, n_, h_):
+def fiNet(k, n_, h_):
     yp1 = math.sqrt(x0)
     yp2 = math.sqrt(x0 + h_)
     xx, psi = numerov_cowells2(x0, xE, n_, yp1, yp2, k2, k)
     return psi[-1]
 
 
-def zeroPoints(h_val):
-    K1 = 0.001 * Kmax
-    K2 = K1 + dK
-    zero_points = []
-
-    n_val = round((xE - x0) / h_val)
-
-    while K2 < Kmax:
-        if fiSiatka(K1, n_val, h_val) * fiSiatka(K2, n_val, h_val) < 0:
-            zero_points.append(bisecSiatka(K1, K2, tol, fiSiatka, n_val, h_val))
-        K1 = K2
-        K2 = K1 + dK
-
-    return zero_points
-
-
 def k2(r, k):
     return k * k + 1.0 / (4.0 * r * r)
 
 
-# zad1
-'''
-Kmax = 20.0
-dK = Kmax / 100.0
-tol = Kmax / 10000.0
-K1 = 0.001 * Kmax
-K2 = K1 + dK
-zero_points = []
 
-while K2 < Kmax:
-    if fiSiatka(K1, n, h) * fiSiatka(K2, n, h) < 0:
-        zero_points.append(bisecSiatka(K1, K2, tol, fi, n, h))
-    K1 = K2
+def main():    
+    Kmax = 20.0
+    dK = Kmax / 100.0
+    tol = Kmax / 10000.0
+    K1 = 0.001 * Kmax
     K2 = K1 + dK
-'''
-# siatka
+    zero_points = []
 
-h_lst = [0.1, 0.01, 0.001, 0.0001, 0.00001]
-points_anal = [2.404826, 5.520078, 8.653728, 11.791534]
-points_y = []
-results = []
-log_lst = []
+    while K2 < Kmax:
+        if fiNet(K1, n, h) * fiNet(K2, n, h) < 0:
+            zero_points.append(bisec(K1, K2, tol, fiNet, n, h))
+        K1 = K2
+        K2 = K1 + dK
 
-for i in range(len(h_lst)):
-    points_y.append(zeroPoints(h_lst[i]))
-    log_lst.append(-1 * math.log10(h_lst[i]))
-print(points_y)
+    filename = "waveguide.data"
+    with open(filename, "w+") as file:
+        for points in zero_points:
+            file.write(str(points))
+            file.write("\n")
 
-for j in range(len(points_y[0])):
-    temp = []
-    for i in range(len(points_y)):
-        temp.append(points_y[i][j])
-    results.append(temp)
-
-print(results)
-
-for i in range(len(h_lst)):
-    if i == 0:
-        plt.plot(log_lst, results[i], label="numerical")
-    else:
-        plt.plot(log_lst, results[i])
-
-for f in points_anal:
-    if f == points_anal[0]:
-        plt.axhline(f, color="black", label="analytical")
-    else:
-        plt.axhline(f, color="black")
-
-plt.xlabel("h values")
-plt.ylabel("Eigen values")
-plt.legend(loc="upper right")
-
-'''
-# zad2
-
-filename = "waveguide.data"
-with open(filename, 'w+') as file:
     for points in zero_points:
-        file.write(str(points))
-        file.write('\n')
+        # print(points)
+        x, y = fiMXY(points)
+        for i in range(len(y)):
+            y[i] = y[i] / math.sqrt(x[i])
+        plt.plot(x, y)
+    plt.xlabel("eigen values")
+    plt.ylabel("eigen vectors")
+    plt.legend()
 
-# zad3
+    plt.grid()
+    plt.show()
 
-for points in zero_points:
-    print(points)
-    x, y = fiMXY(points)
-    for i in range(len(y)):
-        y[i] = y[i] / math.sqrt(x[i])
-    plt.plot(x, y, label="Funkcje radialne amplitud modów normalnych")
-plt.xlabel("eigen values")
-plt.ylabel("eigen vectors")
-plt.legend()
-'''
-plt.grid()
-plt.show()
+if __name__ == "__main__":
+    main()
